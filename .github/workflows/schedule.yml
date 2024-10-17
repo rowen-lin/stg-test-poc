@@ -22,6 +22,11 @@ jobs:
       - name: Run tests
         run: |
           echo "Running ROO staging tests"
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT" > github_context.json
+        shell: bash
 
   #   steps:
   #     - name: Checkout repository
