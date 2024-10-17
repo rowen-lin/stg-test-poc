@@ -1,0 +1,18 @@
+name: Run Shell Script with Env and Secrets
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Run my script
+      run: |
+        chmod +x ./tag_manager.sh
+        ./tag_manager.sh release-test
+      shell: bash
