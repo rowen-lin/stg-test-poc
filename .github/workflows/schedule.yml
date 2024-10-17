@@ -1,0 +1,83 @@
+name: Scheduled Tests
+
+on:
+  push:
+    tags:
+      - release-test
+      - master-test
+  schedule:
+    # 10 pm (UTC+8) every day for staging
+    - cron: "0 14 * * *"
+    # 12 am (UTC+8) every day for production
+    # - cron: "0 16 * * *"
+
+jobs:
+  roo-staging-tests:
+    permissions: write-all
+    runs-on: roo
+    if: |
+      github.event_name == 'schedule' && github.event.schedule == '0 14 * * *' ||
+      github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-test') || startsWith(github.ref, 'refs/tags/master-test'))
+    steps:
+      - name: Run tests
+        run: |
+          echo "Running ROO staging tests"
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Call roo staging tests workflow
+  #       uses: ./.github/actions/test-template
+  #       with:
+  #         environment: staging
+  #         mark: ''
+  #         project: roo
+  #         browser: chrome
+  #         gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
+  #         gh_token: ${{ secrets.GITHUB_TOKEN }}
+
+  #     - name: Clean up
+  #       if: always()
+  #       run: |
+  #         sudo rm -rf allure-history allure-report allure-results common/configs/.secrets.yaml
+  #         echo "Clean up completed"
+  #       shell: bash
+
+  # juji-staging-tests:
+  #   permissions: write-all
+  #   runs-on: juji
+  #   if: ${{ github.event.schedule == '0 14 * * *' }}
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Call juji staging tests workflow
+  #       uses: ./.github/actions/test-template
+  #       with:
+  #         environment: staging
+  #         mark: ''
+  #         project: juji
+  #         browser: chrome
+  #         gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
+  #         gh_token: ${{ secrets.GITHUB_TOKEN }}
+
+  #     - name: Clean up
+  #       if: always()
+  #       run: |
+  #         sudo rm -rf allure-history allure-report allure-results common/configs/.secrets.yaml
+  #         echo "Clean up completed"
+  #       shell: bash
+
+# The production tests will be run on a daily basis until production markers are implemented
+#   roo-prod-tests:
+#     runs-on: self-hosted
+#     if: ${{ github.event.schedule == '0 0 * * *' }}
+#     steps:
+#       - name: Call roo prod tests workflow
+#         uses: ./.github/actions/test-template
+#         with:
+#           environment: prod
+#           mark: ''
+#           project: roo
+#           browser: chrome
