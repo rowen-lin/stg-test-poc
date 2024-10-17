@@ -14,7 +14,7 @@ on:
 jobs:
   roo-staging-tests:
     permissions: write-all
-    runs-on: roo
+    runs-on: self-hosted
     if: |
       github.event_name == 'schedule' && github.event.schedule == '0 14 * * *' ||
       github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-test') || startsWith(github.ref, 'refs/tags/master-test'))
