@@ -18,15 +18,22 @@ jobs:
     if: |
       github.event_name == 'schedule' && github.event.schedule == '0 14 * * *' ||
       github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-test') || startsWith(github.ref, 'refs/tags/master-test'))
+    
     steps:
+      - name: Get build ID from tag
+        id: get_build_id
+        run: |
+          build_id=$(git show -s --format=%B ${{ github.ref }} | grep "Build ID:" | cut -d ":" -f2 | xargs)
+          echo "BUILD_ID=$build_id" >> $GITHUB_ENV
       - name: Run tests
         run: |
-          echo "Running ROO staging tests"
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT" > github_context.json
-        shell: bash
+          # Your test commands here
+          echo "Running tests for build ${{ env.BUILD_ID }}"
+      # - name: Dump GitHub context
+      #   env:
+      #     GITHUB_CONTEXT: ${{ toJson(github) }}
+      #   run: echo "$GITHUB_CONTEXT" > github_context.json
+      #   shell: bash
 
   #   steps:
   #     - name: Checkout repository
