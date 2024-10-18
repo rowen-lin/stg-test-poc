@@ -21,10 +21,11 @@ jobs:
     
     steps:
       - name: Get build ID from tag
-        id: get_build_id
         run: |
+          git fetch --tags
           build_id=$(git show -s --format=%B ${{ github.ref }} | grep "Build ID:" | cut -d ":" -f2 | xargs)
           echo "BUILD_ID=$build_id" >> $GITHUB_ENV
+          echo "Extracted Build ID: $build_id"
       - name: Run tests
         run: |
           # Your test commands here
