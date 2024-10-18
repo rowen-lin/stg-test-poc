@@ -90,10 +90,10 @@ runs:
 
     - name: Set environment properties for allure report
       run: |
-        echo "project=${{ inputs.project }}" >> allure-results/environment.properties
-        echo "environment=${{ inputs.environment }}" >> allure-results/environment.properties
-        echo "browser=${{ inputs.browser }}" >> allure-results/environment.properties
-        echo "build_id=${{ inputs.build_id }}" >> allure-results/environment.properties
+        echo "project=${{ inputs.project }}"
+        echo "environment=${{ inputs.environment }}"
+        echo "browser=${{ inputs.browser }}"
+        echo "build_id=${{ inputs.build_id }}"
       shell: bash
 
     # - name: Build allure report

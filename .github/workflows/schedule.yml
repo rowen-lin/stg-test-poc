@@ -22,13 +22,30 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Debug Git info
+        if: github.event_name == 'push'
+        run: |
+          git status
+          git tag
+          git show-ref --tags
+          echo "Current ref: ${{ github.ref }}"
+          echo "Ref name: ${{ github.ref_name }}"
 
       - name: Get build ID from tag
         if: github.event_name == 'push'
         run: |
-          build_id=$(git show -s --format=%B ${{ github.ref }} | grep "Build ID:" | cut -d ":" -f2 | xargs) || echo "Failed to extract build ID"
-          echo "BUILD_ID=$build_id" >> $GITHUB_ENV
-          echo "Extracted Build ID: $build_id"
+          echo "Attempting to extract Build ID from tag: ${{ github.ref_name }}"
+          build_id=$(git show -s --format=%B ${{ github.ref_name }} | grep "Build ID:" | cut -d ":" -f2 | xargs)
+          if [ -n "$build_id" ]; then
+            echo "BUILD_ID=$build_id" >> $GITHUB_ENV
+            echo "Extracted Build ID: $build_id"
+          else
+            echo "Failed to extract Build ID from tag"
+            git show -s --format=%B ${{ github.ref_name }}
+          fi
       
       - name: Call roo staging tests workflow
         uses: ./.github/actions/test-template
