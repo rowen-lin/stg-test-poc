@@ -20,10 +20,34 @@ jobs:
       github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/release-test') || startsWith(github.ref, 'refs/tags/master-test'))
     
     steps:
-      - name: Get build ID from tag
+      - name: Debug Git info
         run: |
-          git fetch --tags
-          build_id=$(git show -s --format=%B ${{ github.ref }} | grep "Build ID:" | cut -d ":" -f2 | xargs)
+          pwd
+          ls -la
+          git status || echo "Git repository not found"
+          git branch || echo "No branches found"
+          git tag || echo "No tags found"
+
+      - name: Initialize Git if necessary
+        run: |
+          if [ ! -d .git ]; then
+            git init
+            git remote add origin "https://github.com/${{ github.repository }}.git"
+            git fetch
+          fi
+
+      - name: Get build ID from tag
+        id: get_build_id
+        run: |
+          git fetch --tags --force
+          echo "Current directory: $(pwd)"
+          echo "Repository contents:"
+          ls -la
+          echo "Git status:"
+          git status
+          echo "Git tags:"
+          git tag
+          build_id=$(git show -s --format=%B ${{ github.ref }} | grep "Build ID:" | cut -d ":" -f2 | xargs) || echo "Failed to extract build ID"
           echo "BUILD_ID=$build_id" >> $GITHUB_ENV
           echo "Extracted Build ID: $build_id"
       - name: Run tests
