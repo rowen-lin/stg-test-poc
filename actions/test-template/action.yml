@@ -1,0 +1,114 @@
+name: "Run Project Tests"
+description: ""
+inputs:
+  environment:
+    description: "Environment to run tests on"
+    required: true
+  mark:
+    description: "Pytest mark to filter tests"
+    required: false
+  project:
+    description: "Project to run tests for"
+    required: true
+  browser:
+    description: "Browser to run tests on"
+    required: false
+  build_id:
+    description: "Jenkins build ID to test for"
+    required: false
+  gpg_passphrase:
+    description: "GPG passphrase for decrypting secrets"
+    required: true
+  gh_token:
+    description: "GitHub token for publishing allure report"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # - name: Cache Docker layers
+    #   uses: actions/cache@v4
+    #   with:
+    #     path: /var/lib/docker
+    #     key: docker-${{ github.sha }}
+    #     restore-keys: |
+    #       docker-
+
+    # - name: Dump GitHub context
+    #   env:
+    #     GITHUB_CONTEXT: ${{ toJson(github) }}
+    #   run: echo "$GITHUB_CONTEXT" > github_context.json
+    #   shell: bash
+
+    # - name: Decrypt .secrets.yaml
+    #   env:
+    #     GPG_PASSPHRASE: ${{ inputs.gpg_passphrase }}
+    #   run: |
+    #     gpg --quiet --batch --yes --decrypt --passphrase="$GPG_PASSPHRASE" \
+    #     --output common/configs/.secrets.yaml common/configs/.secrets.yaml.gpg
+    #   shell: bash
+
+    # - name: Build Docker image
+    #   run: make build
+    #   shell: bash
+
+    # - name: Run tests
+    #   run: |
+    #     make run-tests ENVIRONMENT=${{ inputs.environment }} PROJECT=${{ inputs.project }} MARK=${{ inputs.mark }} BROWSER=${{ inputs.browser }}
+    #   shell: bash
+
+    # - name: Render the report to the PR
+    #   uses: marocchino/sticky-pull-request-comment@v2
+    #   if: Success()
+    #   with:
+    #     header: test-report
+    #     recreate: true
+    #     path: "reports/${{ inputs.project }}/report.md"
+
+    # - name: Output reports to the job summary when tests fail
+    #   if: Success()
+    #   run: |
+    #     if [ -f "reports/${{ inputs.project }}/report.md" ]; then
+    #       echo "<details><summary>Test Report</summary>" >> $GITHUB_STEP_SUMMARY
+    #       echo "" >> $GITHUB_STEP_SUMMARY
+    #       cat "reports/${{ inputs.project }}/report.md" >> $GITHUB_STEP_SUMMARY
+    #       echo "" >> $GITHUB_STEP_SUMMARY
+    #       echo "</details>" >> $GITHUB_STEP_SUMMARY
+    #     fi
+    #   shell: bash
+
+    # - name: Load allure report history
+    #   uses: actions/checkout@v4
+    #   if: always()
+    #   continue-on-error: true
+    #   with:
+    #     ref: gh-pages
+    #     path: gh-pages
+
+    - name: Set environment properties for allure report
+      run: |
+        echo "project=${{ inputs.project }}" >> allure-results/environment.properties
+        echo "environment=${{ inputs.environment }}" >> allure-results/environment.properties
+        echo "browser=${{ inputs.browser }}" >> allure-results/environment.properties
+        echo "build_id=${{ inputs.build_id }}" >> allure-results/environment.properties
+      shell: bash
+
+    # - name: Build allure report
+    #   uses: simple-elf/allure-report-action@v1.7
+    #   if: always()
+    #   with:
+    #     gh_pages: gh-pages
+    #     allure_history: allure-history
+    #     allure_results: allure-results
+    #     subfolder: "${{inputs.project}}/${{ inputs.environment }}/${{ inputs.browser }}"
+
+    # - name: Publish allure report
+    #   uses: peaceiris/actions-gh-pages@v3
+    #   if: always()
+    #   with:
+    #     github_token: ${{ inputs.gh_token }}
+    #     publish_branch: gh-pages
+    #     publish_dir: allure-history
