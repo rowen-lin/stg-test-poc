@@ -2,6 +2,38 @@
 set -euo pipefail
 set -x
 
+# Function to install jq
+install_jq() {
+    echo "Attempting to install jq..."
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y jq
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y jq
+    elif command -v brew &> /dev/null; then
+        brew install jq
+    else
+        echo "Error: Unable to install jq. Please install it manually."
+        return 1
+    fi
+}
+
+# Check if jq is installed, if not, try to install it
+if ! command -v jq &> /dev/null; then
+    install_jq || {
+        echo "Failed to install jq. Falling back to built-in JSON parsing."
+        parse_json() {
+            local json="$1"
+            local key="$2"
+            local regex="\"$key\":\s*\"([^\"]*)\""
+            if [[ $json =~ $regex ]]; then
+                echo "${BASH_REMATCH[1]}"
+            else
+                echo ""
+            fi
+        }
+    }
+fi
+
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <tag_name> <github_context_json>"
     exit 1
@@ -12,14 +44,14 @@ github_context="$2"
 
 echo "tag_name: $tag_name"
 
-parse_json() {
-    local json="$1"
-    local key="$2"
-    echo "$json" | sed -E 's/.*"'"$key"'"\s*:\s*"([^"]+)".*/\1/'
-}
-
-pr_title=$(parse_json "$github_context" "pr_title")
-merge_by=$(parse_json "$github_context" "merge_by")
+if command -v jq &> /dev/null; then
+    pr_title=$(echo "$github_context" | jq -r '.pr_title')
+    merge_by=$(echo "$github_context" | jq -r '.merge_by')
+else
+    echo "jq is not available. Using fallback method."
+    pr_title=$(parse_json "$github_context" "pr_title")
+    merge_by=$(parse_json "$github_context" "merge_by")
+fi
 
 echo "PR Title: $pr_title"
 echo "Merged by: $merge_by"
@@ -38,6 +70,7 @@ if git show-ref --tags "refs/tags/$tag_name"; then
     echo "delete local"
 fi
 
+# Create a new tag with pr_title and merge_by in the message
 git tag -a "$tag_name" -m "PR Title: $pr_title
 Merged by: $merge_by"
 
