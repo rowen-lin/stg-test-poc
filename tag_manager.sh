@@ -71,8 +71,7 @@ if git show-ref --tags "refs/tags/$tag_name"; then
 fi
 
 # Create a new tag with pr_title and merge_by in the message
-git tag -a "$tag_name" -m "PR Title: $pr_title
-Merged by: $merge_by"
+git tag -a "$tag_name" -m "PR Title: $pr_title Merged by: $merge_by"
 
 # Push the new tag to the remote repository
 git push origin "$tag_name"
