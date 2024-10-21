@@ -46,15 +46,15 @@ echo "tag_name: $tag_name"
 
 if command -v jq &> /dev/null; then
     pr_title=$(echo "$github_context" | jq -r '.pr_title')
-    merge_by=$(echo "$github_context" | jq -r '.merge_by')
+    merged_by=$(echo "$github_context" | jq -r '.merged_by')
 else
     echo "jq is not available. Using fallback method."
     pr_title=$(parse_json "$github_context" "pr_title")
-    merge_by=$(parse_json "$github_context" "merge_by")
+    merged_by=$(parse_json "$github_context" "merged_by")
 fi
 
 echo "PR Title: $pr_title"
-echo "Merged by: $merge_by"
+echo "Merged by: $merged_by"
 
 # Remote tag handling
 if git ls-remote --tags | grep -q -e "refs/tags/$tag_name$"; then
