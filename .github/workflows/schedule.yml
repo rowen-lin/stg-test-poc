@@ -25,26 +25,21 @@ jobs:
         with:
           fetch-depth: 0
       
-      # - name: Debug Git info
-      #   if: github.event_name == 'push'
-      #   run: |
-          
-      - name: Get build ID from tag
+      - name: Extract PR info from tag
         if: github.event_name == 'push'
         run: |
           git fetch --tags --force
           echo "Git tags:"
           git tag
-          echo "Attempting to extract Build ID from tag: ${{ github.ref_name }}"
-          build_id=$(git show -s --format=%B ${{ github.ref }} | grep "Build ID:" | cut -d ":" -f2 | xargs)
-          if [ -n "$build_id" ]; then
-            echo "BUILD_ID=$build_id" >> $GITHUB_ENV
-            echo "Extracted Build ID: $build_id"
-          else
-            echo "Failed to extract Build ID from tag"
-            git show -s --format=%B ${{ github.ref_name }}
-          fi
-      
+          echo "Attempting to extract PR info from tag: ${{ github.ref_name }}"
+          tag_message=$(git show -s --format=%B ${{ github.ref }})
+          pr_title=$(echo "$tag_message" | grep "PR Title:" | cut -d ":" -f2- | xargs)
+          merged_by=$(echo "$tag_message" | grep "Merged by:" | cut -d ":" -f2 | xargs)
+          echo "PR_TITLE=$pr_title" >> $GITHUB_ENV
+          echo "MERGED_BY=$merged_by" >> $GITHUB_ENV
+          echo "Extracted PR Title: $pr_title"
+          echo "Merged by: $merge_by"
+
       - name: Call roo staging tests workflow
         uses: ./.github/actions/test-template
         with:
@@ -52,7 +47,8 @@ jobs:
           mark: ''
           project: roo
           browser: chrome
-          build_id: ${{ github.event_name == 'push' && env.BUILD_ID || '' }}
+          pr_title: ${{ env.PR_TITLE }}
+          merged_by: ${{ env.MERGED_BY }}
           gpg_passphrase: ${{ secrets.GPG_PASSPHRASE }}
           gh_token: ${{ secrets.GITHUB_TOKEN }}
 

@@ -13,8 +13,11 @@ inputs:
   browser:
     description: "Browser to run tests on"
     required: false
-  build_id:
-    description: "Jenkins build ID to test for"
+  pr_title:
+    description: "PR title to test for"
+    required: false
+  merged_by:
+    description: "Person that merged PR"
     required: false
   gpg_passphrase:
     description: "GPG passphrase for decrypting secrets"
