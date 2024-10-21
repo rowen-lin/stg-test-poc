@@ -33,12 +33,12 @@ jobs:
           git tag
           echo "Attempting to extract PR info from tag: ${{ github.ref_name }}"
           tag_message=$(git show -s --format=%B ${{ github.ref }})
-          pr_title=$(echo "$tag_message" | grep "PR Title:" | cut -d ":" -f2- | xargs)
-          merged_by=$(echo "$tag_message" | grep "Merged by:" | cut -d ":" -f2 | xargs)
-          echo "PR_TITLE=$pr_title" >> $GITHUB_ENV
+          pr_info=$(echo "$tag_message" | grep -oP "PR Title: \K.*(?= \| Merged by:)")
+          merged_by=$(echo "$tag_message" | grep -oP "Merged by: \K.*$")
+          echo "PR_TITLE=$pr_info" >> $GITHUB_ENV
           echo "MERGED_BY=$merged_by" >> $GITHUB_ENV
-          echo "Extracted PR Title: $pr_title"
-          echo "Merged by: $merge_by"
+          echo "Extracted PR Title: $pr_info"
+          echo "Merged by: $merged_by"
 
       - name: Call roo staging tests workflow
         uses: ./.github/actions/test-template
