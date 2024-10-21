@@ -15,7 +15,7 @@ echo "tag_name: $tag_name"
 parse_json() {
     local json="$1"
     local key="$2"
-    echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | sed "s/\"$key\":\"//;s/\"$//"
+    echo "$json" | sed -E 's/.*"'"$key"'"\s*:\s*"([^"]+)".*/\1/'
 }
 
 pr_title=$(parse_json "$github_context" "pr_title")
