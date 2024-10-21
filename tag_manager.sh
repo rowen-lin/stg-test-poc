@@ -3,14 +3,26 @@ set -euo pipefail
 set -x
 
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <tag_name> <build_id>"
+    echo "Usage: $0 <tag_name> <github_context_json>"
     exit 1
 fi
 
 tag_name="$1"
-build_id="$2"
+github_context="$2"
+
 echo "tag_name: $tag_name"
-echo "build_id: $build_id"
+
+parse_json() {
+    local json="$1"
+    local key="$2"
+    echo "$json" | grep -o "\"$key\":\"[^\"]*\"" | sed "s/\"$key\":\"//;s/\"$//"
+}
+
+pr_title=$(parse_json "$github_context" "pr_title")
+merge_by=$(parse_json "$github_context" "merge_by")
+
+echo "PR Title: $pr_title"
+echo "Merged by: $merge_by"
 
 # Remote tag handling
 if git ls-remote --tags | grep -q -e "refs/tags/$tag_name$"; then
@@ -26,8 +38,8 @@ if git show-ref --tags "refs/tags/$tag_name"; then
     echo "delete local"
 fi
 
-# Create a new tag with build_id in the message
-git tag -a "$tag_name" -m "Build ID: $build_id"
+git tag -a "$tag_name" -m "PR Title: $pr_title
+Merged by: $merge_by"
 
 # Push the new tag to the remote repository
 git push origin "$tag_name"
